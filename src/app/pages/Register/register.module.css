@@ -1,0 +1,73 @@
+.registerContainer {
+  @apply flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4;
+}
+
+.registrationStages {
+  @apply flex justify-between w-full max-w-md mb-6;
+}
+
+.stage {
+  @apply text-sm text-gray-400 dark:text-gray-600 flex-1 text-center relative;
+}
+
+.stage::before {
+  @apply content-[''] absolute -bottom-2 left-0 w-full h-1 bg-gray-300 dark:bg-gray-700;
+}
+
+.stage.active {
+  @apply text-blue-600 dark:text-blue-400 font-semibold;
+}
+
+.stage.active::before {
+  @apply bg-blue-600 dark:bg-blue-400;
+}
+
+.registerForm {
+  @apply w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 space-y-6;
+}
+
+.formTitle {
+  @apply text-2xl font-bold text-center text-gray-900 dark:text-white mb-6;
+}
+
+.formGroup {
+  @apply space-y-2;
+}
+
+.label {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+}
+
+.input {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           dark:bg-gray-700 dark:text-white;
+}
+
+.submitButton {
+  @apply w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+           transition-colors duration-300;
+}
+
+.errorMessage {
+  @apply bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 
+           p-3 rounded-md text-sm text-center mb-4;
+}
+
+.successMessage {
+  @apply bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 
+           p-3 rounded-md text-sm text-center mb-4;
+}
+
+.formFooter {
+  @apply text-center mt-4 text-sm;
+}
+
+.loginLink {
+  @apply text-gray-600 dark:text-gray-300;
+}
+
+.loginLink a {
+  @apply text-blue-600 hover:underline ml-1 dark:text-blue-400;
+}
