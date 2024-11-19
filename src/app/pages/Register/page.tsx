@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import styles from './register.module.css';
 
@@ -33,6 +33,7 @@ export default function Register() {
     } catch (error) {
       setStage('error');
       setErrorMessage('Failed to send OTP');
+      console.error('Error sending OTP:', error);
     }
   };
 
@@ -46,6 +47,7 @@ export default function Register() {
     } catch (error) {
       setStage('error');
       setErrorMessage('OTP verification failed');
+      console.error('Error verifying OTP:', error);
     }
   };
 

@@ -17,6 +17,7 @@ export default function Login() {
       console.log('Login attempt:', { email, password });
     } catch (err) {
       setError('Login failed. Please check your credentials.');
+      console.log('Login error:', err);
     }
   };
 
