@@ -7,7 +7,7 @@
 }
 
 .stage {
-  @apply text-sm text-gray-400 dark:text-gray-600 flex-1 text-center relative;
+  @apply text-sm text-gray-600 dark:text-gray-400 flex-1 text-center relative;
 }
 
 .stage::before {
@@ -40,24 +40,24 @@
 
 .input {
   @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm 
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-           dark:bg-gray-700 dark:text-white;
+         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+         dark:bg-gray-700 dark:text-white;
 }
 
 .submitButton {
   @apply w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-           transition-colors duration-300;
+         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+         transition-colors duration-300;
 }
 
 .errorMessage {
   @apply bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 
-           p-3 rounded-md text-sm text-center mb-4;
+         p-3 rounded-md text-sm text-center mb-4;
 }
 
 .successMessage {
   @apply bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 
-           p-3 rounded-md text-sm text-center mb-4;
+         p-3 rounded-md text-sm text-center mb-4;
 }
 
 .formFooter {
@@ -68,6 +68,34 @@
   @apply text-gray-600 dark:text-gray-300;
 }
 
+/* Updated link styles for better accessibility */
 .loginLink a {
-  @apply text-blue-600 hover:underline ml-1 dark:text-blue-400;
+  @apply text-blue-600 dark:text-blue-400 
+         underline /* Always show underline */
+         hover:text-blue-800 dark:hover:text-blue-300 /* Darker on hover */
+         focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-sm /* Better focus indicators */
+         font-medium /* Slightly bolder text */
+         inline-flex items-center gap-1 /* For potential icon addition */
+         transition-colors duration-200
+         ml-1;
+}
+
+/* Add focus styles for all interactive elements */
+.input:focus-visible,
+.submitButton:focus-visible,
+.loginLink a:focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white 
+         dark:ring-offset-gray-800;
+}
+
+/* Improved contrast for stage indicators */
+.stage {
+  @apply font-medium; /* Make all stage text slightly bolder */
+}
+
+/* Better visual hierarchy for active stages */
+.stage.active {
+  @apply text-blue-700 dark:text-blue-300 /* Higher contrast colors */
+         font-bold /* Bolder than inactive stages */
+         border-b-2 border-blue-600 dark:border-blue-400; /* Additional visual indicator */
 }

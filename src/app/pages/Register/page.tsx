@@ -61,6 +61,7 @@ export default function Register() {
         throw new Error("Email or OTP is missing.");
       }
       // http://localhost:5000/auth/verify-otp
+      // https://todo-backend-9bdc.onrender.com
       const response = await axios.post("https://todo-backend-9bdc.onrender.com/auth/verify-otp", {
         email,
         otp,
@@ -89,144 +90,148 @@ export default function Register() {
   
 
   return (
-    <div className={styles.registerContainer}>
-      <div className={styles.registrationStages}>
-        <div className={`${styles.stage} ${['initial', 'otp-sent', 'verifying', 'registered'].includes(stage) ? styles.active : ''}`}>
-          Registration Details
-        </div>
-        <div className={`${styles.stage} ${['otp-sent', 'verifying', 'registered'].includes(stage) ? styles.active : ''}`}>
-          OTP Verification
-        </div>
-        <div className={`${styles.stage} ${stage === 'registered' ? styles.active : ''}`}>
-          Registered
-        </div>
-      </div>
-
-      <form 
-        onSubmit={stage === 'initial' ? handleSendOTP : handleVerifyOTP}
-        className={styles.registerForm}
-        aria-labelledby="register-heading"
-      >
-        <h2 id="register-heading" className={styles.formTitle}>
-          Create Your TaskMaster Account
-        </h2>
-
-        {(errors.general || errors.email || errors.otp) && (
-          <div role="alert" className={styles.errorMessage}>
-            {errors.general || errors.email || errors.otp}
+    <>
+      <title>Register</title>
+      <meta name="description" content="Create your TaskMaster account to organize and manage tasks effectively. Enter your details and verify your email with OTP to get started!" />
+      <div className={styles.registerContainer}>
+        <div className={styles.registrationStages}>
+          <div className={`${styles.stage} ${['initial', 'otp-sent', 'verifying', 'registered'].includes(stage) ? styles.active : ''}`}>
+            Registration Details
           </div>
-        )}
-
-        {successMessage && (
-          <div className={styles.successMessage}>
-            {successMessage}
+          <div className={`${styles.stage} ${['otp-sent', 'verifying', 'registered'].includes(stage) ? styles.active : ''}`}>
+            OTP Verification
           </div>
-        )}
+          <div className={`${styles.stage} ${stage === 'registered' ? styles.active : ''}`}>
+            Registered
+          </div>
+        </div>
 
-        {stage === 'initial' && (
-          <>
+        <form 
+          onSubmit={stage === 'initial' ? handleSendOTP : handleVerifyOTP}
+          className={styles.registerForm}
+          aria-labelledby="register-heading"
+        >
+          <h2 id="register-heading" className={styles.formTitle}>
+            Create Your TaskMaster Account
+          </h2>
+
+          {(errors.general || errors.email || errors.otp) && (
+            <div role="alert" className={styles.errorMessage}>
+              {errors.general || errors.email || errors.otp}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className={styles.successMessage}>
+              {successMessage}
+            </div>
+          )}
+
+          {stage === 'initial' && (
+            <>
+              <div className={styles.formGroup}>
+                <label htmlFor="username" className={styles.label}>Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className={styles.input}
+                  placeholder="Choose a username"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="email" className={styles.label}>Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className={styles.input}
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="password" className={styles.label}>Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className={styles.input}
+                  placeholder="Create a strong password"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="confirm-password" className={styles.label}>Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className={styles.input}
+                  placeholder="Repeat your password"
+                />
+              </div>
+            </>
+          )}
+
+          {stage === 'otp-sent' && (
             <div className={styles.formGroup}>
-              <label htmlFor="username" className={styles.label}>Username</label>
+              <label htmlFor="otp" className={styles.label}>Enter OTP</label>
               <input
                 type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
                 required
                 className={styles.input}
-                placeholder="Choose a username"
+                placeholder="6-digit OTP"
               />
             </div>
+          )}
 
-            <div className={styles.formGroup}>
-              <label htmlFor="email" className={styles.label}>Email Address</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={styles.input}
-                placeholder="you@example.com"
-              />
+          {stage === 'initial' && (
+            <button 
+              type="submit" 
+              className={styles.submitButton}
+              aria-label="Send OTP for verification"
+            >
+              Send OTP
+            </button>
+          )}
+
+          {stage === 'otp-sent' && (
+            <button 
+              type="submit" 
+              className={styles.submitButton}
+              aria-label="Verify OTP"
+            >
+              Verify OTP
+            </button>
+          )}
+
+          {stage === 'registered' && (
+            <div className={styles.successMessage}>
+              Registration Successful! Redirecting...
             </div>
+          )}
 
-            <div className={styles.formGroup}>
-              <label htmlFor="password" className={styles.label}>Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className={styles.input}
-                placeholder="Create a strong password"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="confirm-password" className={styles.label}>Confirm Password</label>
-              <input
-                type="password"
-                id="confirm-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className={styles.input}
-                placeholder="Repeat your password"
-              />
-            </div>
-          </>
-        )}
-
-        {stage === 'otp-sent' && (
-          <div className={styles.formGroup}>
-            <label htmlFor="otp" className={styles.label}>Enter OTP</label>
-            <input
-              type="text"
-              id="otp"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-              className={styles.input}
-              placeholder="6-digit OTP"
-            />
+          <div className={styles.formFooter}>
+            <p className={styles.loginLink}>
+              Already have an account? 
+              <Link href="/pages/Login">Log in</Link>
+            </p>
           </div>
-        )}
-
-        {stage === 'initial' && (
-          <button 
-            type="submit" 
-            className={styles.submitButton}
-            aria-label="Send OTP for verification"
-          >
-            Send OTP
-          </button>
-        )}
-
-        {stage === 'otp-sent' && (
-          <button 
-            type="submit" 
-            className={styles.submitButton}
-            aria-label="Verify OTP"
-          >
-            Verify OTP
-          </button>
-        )}
-
-        {stage === 'registered' && (
-          <div className={styles.successMessage}>
-            Registration Successful! Redirecting...
-          </div>
-        )}
-
-        <div className={styles.formFooter}>
-          <p className={styles.loginLink}>
-            Already have an account? 
-            <Link href="/pages/Login">Log in</Link>
-          </p>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </>
   );
 }
