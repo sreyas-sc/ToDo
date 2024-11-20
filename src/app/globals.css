@@ -12,3 +12,9 @@
   overflow: hidden;
   white-space: nowrap;
 }
+
+@layer utilities {
+  .focus-visible-custom:focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900;
+  }
+}

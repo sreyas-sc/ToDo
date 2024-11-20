@@ -1,22 +1,35 @@
 'use client'
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';  // Changed from next/router
+// import { useDispatch } from 'react-redux';
+import axios from 'axios';
 import styles from './register.module.css';
 
 type RegistrationStage = 'initial' | 'otp-sent' | 'verifying' | 'registered' | 'error';
 
+interface Errors {
+  email?: string;
+  otp?: string;
+  general?: string;
+}
+
 export default function Register() {
+  const router = useRouter();
+  // const dispatch = useDispatch();
+  
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [stage, setStage] = useState<RegistrationStage>('initial');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errors, setErrors] = useState<Errors>({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = () => {
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match");
+      setErrors({ ...errors, general: "Passwords do not match" });
       return false;
     }
     return true;
@@ -27,29 +40,54 @@ export default function Register() {
     if (!validateForm()) return;
 
     try {
-      // Simulated OTP send logic
+      console.log('Sending OTP...');
+      await axios.post("http://localhost:5000/auth/send-otp", { email });
       setStage('otp-sent');
-      setErrorMessage('');
+      setErrors({});
+      sessionStorage.setItem("userEmail", email);
     } catch (error) {
-      setStage('error');
-      setErrorMessage('Failed to send OTP');
       console.error('Error sending OTP:', error);
+      setStage('error');
+      setErrors({ ...errors, general: 'Failed to send OTP' });
     }
   };
 
   const handleVerifyOTP = async (e: FormEvent) => {
     e.preventDefault();
-    setStage('verifying');
-
+    setStage("verifying");
+  
     try {
-      // Simulated OTP verification logic
-      setStage('registered');
+      const email = sessionStorage.getItem("userEmail");
+      if (!email || !otp) {
+        throw new Error("Email or OTP is missing.");
+      }
+  
+      const response = await axios.post("http://localhost:5000/auth/verify-otp", {
+        email,
+        otp,
+        username, 
+        password, 
+      });
+  
+      if (response.data.success) {
+        sessionStorage.removeItem("userEmail");
+        setSuccessMessage("Registration Successful!");
+        setStage("registered");
+        localStorage.setItem("userEmail", email);
+        setTimeout(() => {
+          router.push("/pages/Todo"); // Redirect after success
+        }, 2000);
+      } else {
+        setStage("otp-sent");
+        setErrors({ ...errors, otp: "Invalid OTP. Please try again." });
+      }
     } catch (error) {
-      setStage('error');
-      setErrorMessage('OTP verification failed');
-      console.error('Error verifying OTP:', error);
+      console.error("Error verifying OTP:", error);
+      setStage("error");
+      setErrors({ ...errors, otp: "OTP verification failed" });
     }
   };
+  
 
   return (
     <div className={styles.registerContainer}>
@@ -74,9 +112,15 @@ export default function Register() {
           Create Your TaskMaster Account
         </h2>
 
-        {errorMessage && (
+        {(errors.general || errors.email || errors.otp) && (
           <div role="alert" className={styles.errorMessage}>
-            {errorMessage}
+            {errors.general || errors.email || errors.otp}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className={styles.successMessage}>
+            {successMessage}
           </div>
         )}
 
@@ -180,7 +224,7 @@ export default function Register() {
         <div className={styles.formFooter}>
           <p className={styles.loginLink}>
             Already have an account? 
-            <Link href="/pages/Login">Log in</Link>
+            <Link href="/login">Log in</Link>
           </p>
         </div>
       </form>
