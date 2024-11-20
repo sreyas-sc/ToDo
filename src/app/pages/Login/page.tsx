@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 import styles from './login.module.css';
 
 export default function Login() {
@@ -13,11 +14,20 @@ export default function Login() {
     setError('');
 
     try {
-      // Placeholder for authentication logic
-      console.log('Login attempt:', { email, password });
-    } catch (err) {
-      setError('Login failed. Please check your credentials.');
-      console.log('Login error:', err);
+      const response = await axios.post("http://localhost:5000/auth/login", {
+        email,
+        password,
+      });
+
+      // Save token and userId to localStorage
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userId", response.data.userId);
+
+      // Redirect to Todo page
+      window.location.href = "/pages/Todo";
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 

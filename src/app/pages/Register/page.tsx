@@ -2,7 +2,6 @@
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';  // Changed from next/router
-// import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import styles from './register.module.css';
 
