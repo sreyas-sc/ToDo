@@ -223,7 +223,7 @@ export default function Register() {
         <div className={styles.formFooter}>
           <p className={styles.loginLink}>
             Already have an account? 
-            <Link href="/login">Log in</Link>
+            <Link href="/pages/Login">Log in</Link>
           </p>
         </div>
       </form>
