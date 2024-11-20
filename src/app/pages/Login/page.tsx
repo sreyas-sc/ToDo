@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
-import axios from 'axios';
+import axios from 'axios'; // Import AxiosError for better error handling
 import styles from './login.module.css';
 
 export default function Login() {
@@ -23,11 +23,17 @@ export default function Login() {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userId", response.data.userId);
 
-      // Redirect to Todo page
+      // Redirect to To do page
       window.location.href = "/pages/Todo";
-    } catch (err: any) {
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        // Handle Axios errors
+        setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      } else {
+        // Handle non-Axios errors
+        setError("An unexpected error occurred. Please try again.");
+      }
       console.error("Login error:", err);
-      setError(err.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 
