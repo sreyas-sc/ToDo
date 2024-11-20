@@ -40,7 +40,7 @@ export default function Register() {
 
     try {
       console.log('Sending OTP...');
-      await axios.post("http://localhost:5000/auth/send-otp", { email });
+      await axios.post("https://todo-backend-9bdc.onrender.com/auth/send-otp", { email });
       setStage('otp-sent');
       setErrors({});
       sessionStorage.setItem("userEmail", email);
@@ -60,8 +60,8 @@ export default function Register() {
       if (!email || !otp) {
         throw new Error("Email or OTP is missing.");
       }
-  
-      const response = await axios.post("http://localhost:5000/auth/verify-otp", {
+      // http://localhost:5000/auth/verify-otp
+      const response = await axios.post("https://todo-backend-9bdc.onrender.com/auth/verify-otp", {
         email,
         otp,
         username, 
