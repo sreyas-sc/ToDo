@@ -14,16 +14,75 @@ export default function TodoPage() {
   const [newTask, setNewTask] = useState('');
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
 
+  const createXMLFile = (tasks: Task[]) => {
+    const parser = new DOMParser();
+    const serializer = new XMLSerializer();
+
+    // Create root XML structure
+    const xmlDoc = parser.parseFromString('<tasks></tasks>', 'application/xml');
+    const root = xmlDoc.documentElement;
+
+    // Add tasks to the XML structure
+    tasks.forEach(task => {
+      const taskElement = xmlDoc.createElement('task');
+
+      const id = xmlDoc.createElement('id');
+      id.textContent = task.id;
+
+      const text = xmlDoc.createElement('text');
+      text.textContent = task.text;
+
+      const completed = xmlDoc.createElement('completed');
+      completed.textContent = task.completed.toString();
+
+      const createdAt = xmlDoc.createElement('createdAt');
+      createdAt.textContent = task.createdAt.toISOString();
+
+      taskElement.appendChild(id);
+      taskElement.appendChild(text);
+      taskElement.appendChild(completed);
+      taskElement.appendChild(createdAt);
+
+      root.appendChild(taskElement);
+    });
+
+    // Serialize XML
+    const xmlString = serializer.serializeToString(xmlDoc);
+
+    // Save XML to file (requires File System API or backend support)
+    saveXMLFile(xmlString);
+  };
+
+  const saveXMLFile = (xmlContent: string) => {
+    const blob = new Blob([xmlContent], { type: 'application/xml' });
+    const fileURL = URL.createObjectURL(blob);
+
+    // Download the file
+    const link = document.createElement('a');
+    link.href = fileURL;
+    link.download = 'tasks.xml';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(fileURL); // Clean up memory
+  };
+
   const addTask = () => {
     if (newTask.trim()) {
       const task: Task = {
         id: Date.now().toString(),
         text: newTask,
         completed: false,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
-      setTasks([...tasks, task]);
+      const updatedTasks = [...tasks, task];
+      setTasks(updatedTasks);
       setNewTask('');
+
+      // Update XML file
+      createXMLFile(updatedTasks);
+
       // Announce task addition to screen readers
       announceToScreenReader(`Task added: ${newTask}`);
     }
@@ -99,7 +158,7 @@ export default function TodoPage() {
               type="text" 
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Enter a new task"
               className={styles.taskInput}
               aria-label="New task text"
@@ -109,9 +168,7 @@ export default function TodoPage() {
               className={styles.addTaskButton}
               aria-label="Add task"
               disabled={!newTask.trim()}
-            >
-              Add Task
-            </button>
+            >Add Task</button>
           </div>
 
           <div 

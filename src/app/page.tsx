@@ -7,19 +7,20 @@ export default function TodoLanding() {
     <>
       <title>TaskMaster - Organize Your Life, One Task at a Time</title>
       <meta name='description' content='TaskMaster helps you track, manage, and accomplish your goals with ease.' />
-      <div 
+      <main 
         className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 bg-gray-50 dark:bg-gray-900"
         role="main"
         aria-label="Todo App Landing Page"
       >
         <header className="row-start-1 w-full flex justify-between items-center">
-          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" aria-label="TaskMaster Logo">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
+              <title id="logoTitle">TaskMaster Logo</title>
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
             <h1 className="text-xl font-bold text-gray-800 dark:text-white">TaskMaster</h1>
-          </div>
+            </div>
         </header>
 
         <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start text-center sm:text-left">
@@ -74,7 +75,7 @@ export default function TodoLanding() {
             GitHub
           </a>
         </footer>
-      </div>
+      </main>
     </>
   );
 }
