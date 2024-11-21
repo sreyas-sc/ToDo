@@ -1,8 +1,11 @@
 'use client'
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, useEffect, KeyboardEvent } from 'react';
 import styles from './todo.module.css';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
-interface Task {
+
+interface Task { 
   id: string;
   text: string;
   completed: boolean;
@@ -13,16 +16,36 @@ export default function TodoPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState('');
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter()
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const createXMLFile = (tasks: Task[]) => {
-    const parser = new DOMParser();
-    const serializer = new XMLSerializer();
+  useEffect(() => {
+    // Safely retrieve userId only on client-side
+    const storedUserId = typeof window !== 'undefined' ? sessionStorage.getItem('userId') : null;
+    
+    if (storedUserId) {
+      setUserId(storedUserId);
+      loadTasksFromServer(storedUserId);
+    } else {
+      router.push('/pages/Login');
+    }
+  }, [router]);
 
-    // Create root XML structure
-    const xmlDoc = parser.parseFromString('<tasks></tasks>', 'application/xml');
-    const root = xmlDoc.documentElement;
 
-    // Add tasks to the XML structure
+
+  const handleLogout = () => {
+    // Remove userId from sessionStorage
+    sessionStorage.removeItem('userId');
+    
+    // Redirect to login page
+    router.push('/pages/Login');
+  };
+
+  const createXMLString = (tasks: Task[]) => { 
+    const serializer = new XMLSerializer(); 
+    const xmlDoc = document.implementation.createDocument(null, 'tasks', null);
+
     tasks.forEach(task => {
       const taskElement = xmlDoc.createElement('task');
 
@@ -43,31 +66,68 @@ export default function TodoPage() {
       taskElement.appendChild(completed);
       taskElement.appendChild(createdAt);
 
-      root.appendChild(taskElement);
+      xmlDoc.documentElement.appendChild(taskElement);
     });
 
-    // Serialize XML
-    const xmlString = serializer.serializeToString(xmlDoc);
-
-    // Save XML to file (requires File System API or backend support)
-    saveXMLFile(xmlString);
+    return serializer.serializeToString(xmlDoc);
   };
 
-  const saveXMLFile = (xmlContent: string) => {
-    const blob = new Blob([xmlContent], { type: 'application/xml' });
-    const fileURL = URL.createObjectURL(blob);
+  const parseXMLString = (xmlString: string): Task[] => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+    const taskElements = Array.from(xmlDoc.getElementsByTagName('task'));
 
-    // Download the file
-    const link = document.createElement('a');
-    link.href = fileURL;
-    link.download = 'tasks.xml';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(fileURL); // Clean up memory
+    return taskElements.map(task => ({
+      id: task.querySelector('id')?.textContent || '',
+      text: task.querySelector('text')?.textContent || '',
+      completed: task.querySelector('completed')?.textContent === 'true',
+      createdAt: new Date(task.querySelector('createdAt')?.textContent || ''),
+    }));
   };
 
+  const saveTasksToServer = async () => {
+    console.log('Current tasks before saving:', tasks);
+    
+    const xmlString = createXMLString(tasks);
+    console.log('XML String Length:', xmlString.length);
+    console.log('Number of tasks in XML:', tasks.length);
+  
+    try {
+      const response = await axios.post('http://localhost:5000/task-xml/save-xml', {
+        userId, 
+        xmlData: xmlString
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      console.log('Server response:', response.data);
+    } catch (error) {
+      console.error('Error saving tasks:', error);
+    }
+  };
+
+  const loadTasksFromServer = async (currentUserId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`http://localhost:5000/task-xml/get-xml/${currentUserId}`);
+      
+      const tasksFromXML = parseXMLString(response.data.xmlData);
+      setTasks(tasksFromXML);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        // No tasks found is not an error, just set empty tasks
+        setTasks([]);
+      } else {
+        console.error('Error loading tasks from server:', error);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  
   const addTask = () => {
     if (newTask.trim()) {
       const task: Task = {
@@ -79,49 +139,39 @@ export default function TodoPage() {
       const updatedTasks = [...tasks, task];
       setTasks(updatedTasks);
       setNewTask('');
-
-      // Update XML file
-      createXMLFile(updatedTasks);
-
-      // Announce task addition to screen readers
-      announceToScreenReader(`Task added: ${newTask}`);
+      
+      // Use async/await and ensure the state is updated before saving
+      const saveTasksAsync = async () => {
+        await new Promise(resolve => setTimeout(resolve, 0)); // Slight delay to ensure state is updated
+        await saveTasksToServer();
+      };
+      saveTasksAsync();
     }
+  };
+
+  const toggleTaskCompletion = (id: string) => {
+    const updatedTasks = tasks.map(task => {
+      if (task.id === id) {
+        const newTask = { ...task, completed: !task.completed };
+        console.log('Toggling task:', newTask); // Add logging
+        return newTask;
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+    saveTasksToServer(); // Ensure this is called after state update
+  };
+
+  const deleteTask = (id: string) => {
+    const updatedTasks = tasks.filter(task => task.id !== id);
+    setTasks(updatedTasks);
+    saveTasksToServer(); // This will update the XML with remaining tasks
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       addTask();
     }
-  };
-
-  const toggleTaskCompletion = (id: string) => {
-    setTasks(tasks.map(task => {
-      if (task.id === id) {
-        const newStatus = !task.completed;
-        // Announce status change to screen readers
-        announceToScreenReader(`Task ${task.text} marked as ${newStatus ? 'completed' : 'pending'}`);
-        return { ...task, completed: newStatus };
-      }
-      return task;
-    }));
-  };
-
-  const deleteTask = (id: string) => {
-    const taskToDelete = tasks.find(task => task.id === id);
-    if (taskToDelete) {
-      announceToScreenReader(`Task deleted: ${taskToDelete.text}`);
-      setTasks(tasks.filter(task => task.id !== id));
-    }
-  };
-
-  const announceToScreenReader = (message: string) => {
-    const announcement = document.createElement('div');
-    announcement.setAttribute('role', 'status');
-    announcement.setAttribute('aria-live', 'polite');
-    announcement.className = 'sr-only';
-    announcement.textContent = message;
-    document.body.appendChild(announcement);
-    setTimeout(() => document.body.removeChild(announcement), 1000);
   };
 
   const pendingTasks = tasks.filter(task => !task.completed);
@@ -142,6 +192,15 @@ export default function TodoPage() {
             <span className="sr-only">Show </span>
             Completed Tasks ({completedTasks.length})
           </button>
+
+          <button 
+            onClick={handleLogout}
+            className={styles.logoutButton}
+            aria-label="Logout"
+          >
+            Logout
+          </button>
+
         </aside>
 
         <div className={styles.mainContent}>

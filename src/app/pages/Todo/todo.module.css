@@ -96,6 +96,21 @@
   @apply text-center text-gray-500 dark:text-gray-400 py-8;
 }
 
+.logoutButton {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  background-color: #ff3333;
+}
+
 /* Screen reader only class */
 .sr-only {
   @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
