@@ -78,10 +78,10 @@ export default function TodoPage() {
     const taskElements = Array.from(xmlDoc.getElementsByTagName('task'));
 
     return taskElements.map(task => ({
-      id: task.querySelector('id')?.textContent || '',
-      text: task.querySelector('text')?.textContent || '',
+      id: task.querySelector('id')?.textContent ?? '',
+      text: task.querySelector('text')?.textContent ?? '',
       completed: task.querySelector('completed')?.textContent === 'true',
-      createdAt: new Date(task.querySelector('createdAt')?.textContent || ''),
+      createdAt: new Date(task.querySelector('createdAt')?.textContent ?? ''),
     }));
   };
 
@@ -181,8 +181,8 @@ export default function TodoPage() {
     <>
       <title>TaskMaster - Organize Your Life, One Task at a Time</title>
       <meta name="description" content="TaskMaster helps you track, manage, and accomplish your goals with ease." />
-      <div className={styles.todoContainer} role="main">
-        <aside className={styles.sidebar} role="complementary">
+      <main className={styles.todoContainer} role="main">
+        <aside className={styles.sidebar}>
           <button 
             onClick={() => setShowCompletedTasks(!showCompletedTasks)}
             className={styles.completedTasksButton}
@@ -312,7 +312,7 @@ export default function TodoPage() {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </>
   );
 }
