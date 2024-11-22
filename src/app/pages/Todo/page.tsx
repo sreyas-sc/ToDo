@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 
+// base Task Interface
 interface Task { 
   id: string;
   text: string;
@@ -12,8 +13,17 @@ interface Task {
   createdAt: Date;
 }
 
+
+// Subtype for Recurring Tasks (Implementation of LSP - Liskov Substitution Principle)
+interface RecurringTask extends Task {
+  recurrenceInterval: 'daily' | 'weekly' | 'monthly';
+}
+
+// Union Type for Tasks
+type TaskType = Task | RecurringTask;
+
 export default function TodoPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [newTask, setNewTask] = useState('');
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,47 +52,108 @@ export default function TodoPage() {
     router.push('/pages/Login');
   };
 
-  const createXMLString = (tasks: Task[]) => { 
-    const serializer = new XMLSerializer(); 
+  // const createXMLString = (tasks: Task[]) => { 
+  //   const serializer = new XMLSerializer(); 
+  //   const xmlDoc = document.implementation.createDocument(null, 'tasks', null);
+
+  //   tasks.forEach(task => {
+  //     const taskElement = xmlDoc.createElement('task');
+
+  //     const id = xmlDoc.createElement('id');
+  //     id.textContent = task.id;
+
+  //     const text = xmlDoc.createElement('text');
+  //     text.textContent = task.text;
+
+  //     const completed = xmlDoc.createElement('completed');
+  //     completed.textContent = task.completed.toString();
+
+  //     const createdAt = xmlDoc.createElement('createdAt');
+  //     createdAt.textContent = task.createdAt.toISOString();
+
+  //     taskElement.appendChild(id);
+  //     taskElement.appendChild(text);
+  //     taskElement.appendChild(completed);
+  //     taskElement.appendChild(createdAt);
+
+  //     xmlDoc.documentElement.appendChild(taskElement);
+  //   });
+
+  //   return serializer.serializeToString(xmlDoc);
+  // };
+
+  // const parseXMLString = (xmlString: string): Task[] => {
+  //   const parser = new DOMParser();
+  //   const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+  //   const taskElements = Array.from(xmlDoc.getElementsByTagName('task'));
+
+  //   return taskElements.map(task => ({
+  //     id: task.querySelector('id')?.textContent ?? '',
+  //     text: task.querySelector('text')?.textContent ?? '',
+  //     completed: task.querySelector('completed')?.textContent === 'true',
+  //     createdAt: new Date(task.querySelector('createdAt')?.textContent ?? ''),
+  //   }));
+  // };
+  const createXMLString = (tasks: TaskType[]) => {
+    const serializer = new XMLSerializer();
     const xmlDoc = document.implementation.createDocument(null, 'tasks', null);
-
-    tasks.forEach(task => {
+  
+    tasks.forEach((task) => {
       const taskElement = xmlDoc.createElement('task');
-
+  
       const id = xmlDoc.createElement('id');
       id.textContent = task.id;
-
+  
       const text = xmlDoc.createElement('text');
       text.textContent = task.text;
-
+  
       const completed = xmlDoc.createElement('completed');
       completed.textContent = task.completed.toString();
-
+  
       const createdAt = xmlDoc.createElement('createdAt');
       createdAt.textContent = task.createdAt.toISOString();
-
+  
       taskElement.appendChild(id);
       taskElement.appendChild(text);
       taskElement.appendChild(completed);
       taskElement.appendChild(createdAt);
-
+  
+      if ('recurrenceInterval' in task) {
+        const recurrenceInterval = xmlDoc.createElement('recurrenceInterval');
+        recurrenceInterval.textContent = task.recurrenceInterval;
+        taskElement.appendChild(recurrenceInterval);
+      }
+  
       xmlDoc.documentElement.appendChild(taskElement);
     });
-
+  
     return serializer.serializeToString(xmlDoc);
   };
 
-  const parseXMLString = (xmlString: string): Task[] => {
+
+  const parseXMLString = (xmlString: string): TaskType[] => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
     const taskElements = Array.from(xmlDoc.getElementsByTagName('task'));
-
-    return taskElements.map(task => ({
-      id: task.querySelector('id')?.textContent ?? '',
-      text: task.querySelector('text')?.textContent ?? '',
-      completed: task.querySelector('completed')?.textContent === 'true',
-      createdAt: new Date(task.querySelector('createdAt')?.textContent ?? ''),
-    }));
+  
+    return taskElements.map((task) => {
+      const id = task.querySelector('id')?.textContent ?? '';
+      const text = task.querySelector('text')?.textContent ?? '';
+      const completed = task.querySelector('completed')?.textContent === 'true';
+      const createdAt = new Date(task.querySelector('createdAt')?.textContent ?? '');
+  
+      const recurrenceInterval = task.querySelector('recurrenceInterval')?.textContent as
+        | 'daily'
+        | 'weekly'
+        | 'monthly'
+        | undefined;
+  
+      if (recurrenceInterval) {
+        return { id, text, completed, createdAt, recurrenceInterval };
+      } else {
+        return { id, text, completed, createdAt };
+      }
+    });
   };
 
   const saveTasksToServer = async () => {
@@ -128,26 +199,57 @@ export default function TodoPage() {
   };
 
   
-  const addTask = () => {
+  // const addTask = () => {
+  //   if (newTask.trim()) {
+  //     const task: Task = {
+  //       id: Date.now().toString(),
+  //       text: newTask,
+  //       completed: false,
+  //       createdAt: new Date(),
+  //     };
+  //     const updatedTasks = [...tasks, task];
+  //     setTasks(updatedTasks);
+  //     setNewTask('');
+      
+  //     // Use async/await and ensure the state is updated before saving
+  //     const saveTasksAsync = async () => {
+  //       await new Promise(resolve => setTimeout(resolve, 0)); // Slight delay to ensure state is updated
+  //       await saveTasksToServer();
+  //     };
+  //     saveTasksAsync();
+  //   }
+  // };
+
+  const addTask = (isRecurring: boolean = false, recurrenceInterval?: 'daily' | 'weekly' | 'monthly') => {
     if (newTask.trim()) {
-      const task: Task = {
-        id: Date.now().toString(),
-        text: newTask,
-        completed: false,
-        createdAt: new Date(),
-      };
+      const task: TaskType = isRecurring && recurrenceInterval
+        ? {
+            id: Date.now().toString(),
+            text: newTask,
+            completed: false,
+            createdAt: new Date(),
+            recurrenceInterval,
+          }
+        : {
+            id: Date.now().toString(),
+            text: newTask,
+            completed: false,
+            createdAt: new Date(),
+          };
+  
       const updatedTasks = [...tasks, task];
       setTasks(updatedTasks);
       setNewTask('');
-      
-      // Use async/await and ensure the state is updated before saving
+  
       const saveTasksAsync = async () => {
-        await new Promise(resolve => setTimeout(resolve, 0)); // Slight delay to ensure state is updated
+        await new Promise((resolve) => setTimeout(resolve, 0));
         await saveTasksToServer();
       };
       saveTasksAsync();
     }
   };
+
+  
 
   const toggleTaskCompletion = (id: string) => {
     const updatedTasks = tasks.map(task => {
@@ -223,11 +325,15 @@ export default function TodoPage() {
               aria-label="New task text"
             />
             <button 
-              onClick={addTask} 
+              
+              onClick={() => addTask()} 
               className={styles.addTaskButton}
               aria-label="Add task"
               disabled={!newTask.trim()}
-            >Add Task</button>
+            >
+              Add Task
+            </button>
+
           </div>
 
           <div 
@@ -244,7 +350,13 @@ export default function TodoPage() {
                   className={styles.taskItem}
                   role="listitem"
                 >
-                  <label className={styles.taskLabel}>
+                  <label className={styles.taskLabel}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      toggleTaskCompletion(task.id);
+                    }
+                  }}
+                  tabIndex={0}>
                     <input 
                       type="checkbox" 
                       checked={task.completed}
@@ -252,7 +364,9 @@ export default function TodoPage() {
                       className={styles.taskCheckbox}
                       aria-label={`Mark "${task.text}" as ${task.completed ? 'pending' : 'completed'}`}
                     />
-                    <span className={styles.taskText}>{task.text}</span>
+                    <span className={styles.taskText}>{task.text}{'recurrenceInterval' in task && (
+                    <span className={styles.recurrenceInfo}> (Repeats: {task.recurrenceInterval})</span>
+                  )}</span>
                   </label>
                   <button 
                     onClick={() => deleteTask(task.id)} 
